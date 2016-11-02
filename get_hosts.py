@@ -6,8 +6,9 @@ import multiprocessing
 
 ##### get_hosts
 ### v0.2
+# TODO(kid): TEST yo' shit
 # GOALS:
-#   [/] refactor the v0.1 code
+#   [x] refactor the v0.1 code
 #   [ ] launch a process every t nseconds 
 #   [x] allow only n calls to be made in parralel
 #(  [ ] find better way of obtaining the hostname of an IP)
@@ -23,6 +24,11 @@ print("BOP")
 
 # a way to pweety print stuff
 print('%-24s%-48s%-24s%-8s' % ("IP", "DNS", "DOMAIN", "RESPONSE"))
+
+def split_array(array, parts = 1):
+    length = len(array)
+    return [ array[i*length // parts: (i+1)*length // parts] 
+             for i in range(parts) ]
 
 def val_to_text(val):
     if val == -1:   return "FAIL"
@@ -62,63 +68,75 @@ def ping(hostname, hping=False):
     else:             return -1
 
 class process:
-    def __init__(self, ip):
-        self.ip = ip
-        self.dns = "FAIL"
-        self.hostname = "FAIL"
-        self.response = 1
+    def __init__(self):
+        self.IPZ = []
+        self.RESULTS = {}
     
     def start(self):
-        self.dns = get_dns(self.ip)
-        if self.dns != "FAIL":       self.hostname = get_hostname(self.dns)
-        else:                        return -1
+        for ip in self.IPZ:
+            dns = get_dns(ip)
+            
+            if dns != "FAIL":           hostname = get_hostname(dns)
+            else:                       hostname = "FAIL"; response = "FAIL"
 
-        if self.hostname != "FAIL":  self.response = ping(self.hostname)
-        else:                        return -1
+            if hostname != "FAIL":      response = ping(hostname)
+            else:                       response = "FAIL"
+
+            print('%-24s%-48s%-24s%-8s' % (self.ip, self.dns, self.hostname, val_to_text(self.response)))
+
+            if response == "FAIL":      continue
+            else:                       self.RESULTS[ip] = hostname
         
-        print('%-24s%-48s%-24s%-8s' % (self.ip, self.dns, self.hostname, val_to_text(self.response)))
-        return self.response
+        return 0
 
-class controller:
-    def __init__(self, queueLimit = 10):
-        self.queueLimit = queueLimit
-        self.QUEUE = []
+    def write_results(self, filename):
+        for key in self.RESULTS.keys():
+            write_output(filename, key + " " + self.RESULTS[key])
 
-    # TODO(kid): Check if an IP already exists / has existed.
-    def start_process(self, process):
-        if (len(self.QUEUE)) >= self.queueLimit:
-            return -1
-        else:
-            self.QUEUE.append(process)
-            if process.start(): self.QUEUE.remove(process)
+class container:
+    def __init__(self, process_limit = 10):
+        self.ips_array = []
+        self.process_limit = process_limit
+        self.PROCESSES = []
+    
+    def add_ips(self, filename):    self.ips_array = get_ips_as_array(filename)
+    def add_process(self, p):       self.PROCESSES.append(p)
+    def n_of_ps(self):              return len(self.PROCESSES)
 
-# TODO(kid): If not used, just remove
+    def divide_ips(self):
+        arrays = split_array(self.ips_array, n_of_ps())
+        
+        i = 0
+        for p in self.PROCESSES:
+            p.IPZ = arrays[i]
+            i += 1
+    
+    def start_all_ps(self):
+        for p in self.PROCESSES:
+            p.start()
+
+
+
+
 def get_ips_as_array(filename):
     OUTPUT = []
-    with open(filename) as f:
+    try: File = open(filename, "r+")
+    except:
+        print("")
+
+    with File as f:
         for line in f:
             line = line.strip() # strip ≜ trim
             OUTPUT.append(line)
     return OUTPUT
 
 def write_output(filename, string):
-    output = open(filename, "a+")
+    try: output = open(filename, "a+")
+    except:
+        print(filename + " does not exist.")
+        sys.exit()
+    
     ouput.write(string + "\n")
     output.close()
-
-def multi_processing(function, array, processes = 4):
-    if __name__ == '__main__':
-        p = multiprocessing.Pool(processes)
-        p.map(function, array)
-
-# TODO(kid):
-#   IP Array is broken down into p parts, where p is the number of processes
-#   Every process spawns a class which takes a part of all IPS
-#
-#   FOR EVERY PROCESS:
-#   send IP => controller
-#   controller responds
-#   if  0: delete last IP from list, sleep, send next IP
-#   if -1: sleep, retry to send last IP
 
 print("EOP")
