@@ -5,13 +5,18 @@ import itertools, sys, os
 import multiprocessing
 
 ##### get_hosts
+### v0.3
+# GOALS:
+#   [ ] introduce async functions
+#   [ ] multiprocessing should 
+#   [ ] 
+
+
+
 ### v0.2
-# TODO(kid): TEST yo' shit
 # GOALS:
 #   [x] refactor the v0.1 code
-#   [ ] launch a process every t nseconds 
 #   [x] allow only n calls to be made in parralel
-#(  [ ] find better way of obtaining the hostname of an IP)
 #   [x] make pweety print part more convinient (stop repeating yourself)
 
 ### v.0.1.0
@@ -71,6 +76,7 @@ class process:
     def __init__(self):
         self.IPZ = []
         self.RESULTS = {}
+        self.DONE = False
     
     def start(self):
         for ip in self.IPZ:
@@ -82,47 +88,44 @@ class process:
             if hostname != "FAIL":      response = ping(hostname)
             else:                       response = "FAIL"
 
-            print('%-24s%-48s%-24s%-8s' % (self.ip, self.dns, self.hostname, val_to_text(self.response)))
+            print('%-24s%-48s%-24s%-8s' % (ip, dns, hostname, val_to_text(response)))
 
             if response == "FAIL":      continue
             else:                       self.RESULTS[ip] = hostname
-        
-        return 0
 
     def write_results(self, filename):
         for key in self.RESULTS.keys():
-            write_output(filename, key + " " + self.RESULTS[key])
+            print(filename, key + " " + self.RESULTS[key])
 
 class container:
     def __init__(self, process_limit = 10):
         self.ips_array = []
         self.process_limit = process_limit
         self.PROCESSES = []
-    
+
+    # TODO(kid): don't allow instances of the same process
     def add_ips(self, filename):    self.ips_array = get_ips_as_array(filename)
     def add_process(self, p):       self.PROCESSES.append(p)
     def n_of_ps(self):              return len(self.PROCESSES)
 
     def divide_ips(self):
-        arrays = split_array(self.ips_array, n_of_ps())
+        arrays = split_array(self.ips_array, self.n_of_ps())
         
         i = 0
         for p in self.PROCESSES:
             p.IPZ = arrays[i]
             i += 1
-    
-    def start_all_ps(self):
-        for p in self.PROCESSES:
-            p.start()
 
-
-
+    def start_process(self, p): p.start()
+        # for p in self.PROCESSES:
+        #     p.start()
 
 def get_ips_as_array(filename):
     OUTPUT = []
     try: File = open(filename, "r+")
     except:
-        print("")
+        print(File + " does not exist.")
+        sys.exit()
 
     with File as f:
         for line in f:
@@ -131,12 +134,35 @@ def get_ips_as_array(filename):
     return OUTPUT
 
 def write_output(filename, string):
-    try: output = open(filename, "a+")
+    try: output = open(filename, "w+")
     except:
         print(filename + " does not exist.")
         sys.exit()
-    
+
     ouput.write(string + "\n")
     output.close()
+
+fl = "ipz"
+
+c = container()
+c.add_ips(fl)
+
+p1 = process()
+p2 = process()
+
+c.add_process(p1)
+c.add_process(p2)
+
+c.divide_ips()
+
+def write_shit(p):
+    print("output")
+
+if __name__ == "__main__":
+    p = multiprocessing.Pool(4)
+    p.map(c.start_process, c.PROCESSES)
+    
+    p.map(write_shit, c.PROCESSES)
+
 
 print("EOP")
