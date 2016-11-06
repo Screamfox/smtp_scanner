@@ -8,10 +8,10 @@ import multiprocessing
 ### v0.3
 # GOALS:
 #   [ ] introduce async functions
-#   [ ] multiprocessing should 
-#   [ ] 
-
-
+#   [ ] func: spawn a process inside a container
+#   [ ] fix the bug where processes don't write to their RESULT
+#   [ ] keep track of all [DONE | TOTAL] IPs in each process
+#   [ ] fix the deadlock problem @ async. processes
 
 ### v0.2
 # GOALS:
@@ -28,7 +28,8 @@ import multiprocessing
 print("BOP")
 
 # a way to pweety print stuff
-print('%-24s%-48s%-24s%-8s' % ("IP", "DNS", "DOMAIN", "RESPONSE"))
+# print('%-24s%-48s%-24s%-8s' % ("IP", "DNS", "DOMAIN", "RESPONSE"))
+print('%-24s%-64s%-48s%-8s' % ("IP", "DNS", "DOMAIN", "RESPONSE"))
 
 def split_array(array, parts = 1):
     length = len(array)
@@ -77,7 +78,7 @@ class process:
         self.IPZ = []
         self.RESULTS = {}
         self.DONE = False
-    
+
     def start(self):
         for ip in self.IPZ:
             dns = get_dns(ip)
@@ -88,7 +89,8 @@ class process:
             if hostname != "FAIL":      response = ping(hostname)
             else:                       response = "FAIL"
 
-            print('%-24s%-48s%-24s%-8s' % (ip, dns, hostname, val_to_text(response)))
+            # print('%-24s%-48s%-24s%-8s' % (ip, dns, hostname, val_to_text(response)))
+            print('%-24s%-64s%-48s%-8s' % (ip, dns, hostname, val_to_text(response)))
 
             if response == "FAIL":      continue
             else:                       self.RESULTS[ip] = hostname
