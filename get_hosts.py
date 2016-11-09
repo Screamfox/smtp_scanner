@@ -11,7 +11,7 @@ import multiprocessing
 #   [ ] func: spawn a process inside a container
 #   [ ] fix the bug where processes don't write to their RESULT
 #   [ ] keep track of all [DONE | TOTAL] IPs in each process
-#   [ ] fix the deadlock problem @ async. processes
+#   [ ] fix the deadlock problem @ async processes
 
 ### v0.2
 # GOALS:
