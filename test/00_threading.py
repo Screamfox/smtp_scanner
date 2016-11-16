@@ -1,10 +1,7 @@
-# from multiprocessing import Pool
+#!/usr/bin/python3
 
+# def f(x): return x*x
 def f(x): print(x*x)
-
-# if __name__ == '__main__':
-#     pool = Pool(processes=2) #start a worker process
-#     result = pool.apply_async(f, [10]) 
 
 import threading
 
