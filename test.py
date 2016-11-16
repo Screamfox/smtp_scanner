@@ -1,40 +1,39 @@
-from multiprocessing import Pool, TimeoutError
-import time
-import os
+# from multiprocessing import Pool
 
-def f(x): return x*x
+def f(x): print(x*x)
 
-if __name__ == '__main__':
-    # start 4 worker processes
-    with Pool(processes=4) as pool:
+# if __name__ == '__main__':
+#     pool = Pool(processes=2) #start a worker process
+#     result = pool.apply_async(f, [10]) 
 
-        # print "[0, 1, 4,..., 81]"
-        print(pool.map(f, range(10)))
+import threading
 
-        # print same numbers in arbitrary order
-        for i in pool.imap_unordered(f, range(10)):
-            print(i)
+# x.start()
+# x.is_alive()
+# x.join()
 
-        # evaluate "f(20)" asynchronously
-        res = pool.apply_async(f, (20,))      # runs in *only* one process
-        print(res.get(timeout=1))             # prints "400"
+threading.TIMEOUT_MAX = 1
 
-        # evaluate "os.getpid()" asynchronously
-        res = pool.apply_async(os.getpid, ()) # runs in *only* one process
-        print(res.get(timeout=1))             # prints the PID of that process
+i = 0
+j = 0
+x = threading.Thread(target=f, args=([0]), kwargs={})
+y = threading.Thread(target=f, args=([0]), kwargs={})
+while(True):
+    if not x.is_alive() and i <= 100: 
+        x = threading.Thread(target=f, args=([i]), kwargs={})
+        x.start()
+        i += 1
+    else:
+        x.join()
 
-        # launching multiple evaluations asynchronously *may* use more processes
-        multiple_results = [pool.apply_async(os.getpid, ()) for i in range(4)]
-        print([res.get(timeout=1) for res in multiple_results])
-
-        # make a single worker sleep for 10 secs
-        res = pool.apply_async(time.sleep, (10,))
-        try:
-            print(res.get(timeout=1))
-        except TimeoutError:
-            print("We lacked patience and got a multiprocessing.TimeoutError")
-
-        print("For the moment, the pool remains available for more work")
-
-    # exiting the 'with'-block has stopped the pool
-    print("Now the pool is closed and no longer available")
+    if not y.is_alive() and j <= 100:
+        y = threading.Thread(target=f, args=([j]), kwargs={})
+        y.start()
+        j += 1
+    else:
+        y.join()
+    
+    if i >= 101 and j >= 101:
+        # print(str(x.is_alive) +" and "+ str(y.is_alive))
+        if x.is_alive and y.is_alive:
+            break
