@@ -12,6 +12,7 @@ import multiprocessing
 #   [ ] introduce async threads
 #   [ ] keep track of all [DONE | TOTAL] IPs in each process
 #   [ ] fix the x race @ async threads when writing to file
+#   [ ] up the TIMEOUT to 8 sec ?
 
 ### v0.2
 # GOALS:
